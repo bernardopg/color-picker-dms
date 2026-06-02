@@ -14,7 +14,7 @@
   "compositors": ["niri", "hyprland"],
   "distro": ["any"],
   "repo": "https://github.com/bernardopg/color-picker-dms",
-  "screenshot": "https://raw.githubusercontent.com/bernardopg/color-picker-dms/main/screenshot.png",
+  "screenshot": "https://raw.githubusercontent.com/bernardopg/color-picker-dms/assets/screenshot.png",
   "requires": ["wl-clipboard"],
   "requires_dms": ">=0.1.18",
   "permissions": ["process", "settings_read", "settings_write"]
