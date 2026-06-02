@@ -192,11 +192,13 @@ PluginComponent {
     }
 
     function showPillMenu(x, y, triggerWidth, section, currentScreen) {
-        pillContextMenu.close()
-        pillContextMenu.x = Math.max(Theme.spacingM, x)
-        pillContextMenu.y = Math.max(Theme.spacingM, y)
-        pillContextMenu.open()
-    }
+    pillContextMenu.close()
+
+    pillContextMenu.x = Math.max(Theme.spacingM, x)
+    pillContextMenu.y = Math.max(Theme.spacingM, y)
+
+    pillContextMenu.open()
+}
 
     // ── palette ──────────────────────────────────────────────────────────────
     function addToPalette() {
@@ -299,21 +301,10 @@ PluginComponent {
     }
 
     verticalBarPill: Component {
-        MouseArea {
-            id: vPill
+        Item {
             width: root.barThickness
             height: root.barThickness
-            cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            enabled: !root.picking
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.RightButton) {
-                    var pt = vPill.mapToItem(Overlay.overlay, mouse.x, mouse.y)
-                    root.showPillMenu(pt.x, pt.y, width, null, null)
-                } else {
-                    root.pickQuick()
-                }
-            }
+
             DankIcon {
                 name: "colorize"
                 size: Theme.barIconSize(root.barThickness, -2)
