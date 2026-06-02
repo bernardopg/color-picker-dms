@@ -1,13 +1,11 @@
 <div align="center">
 
-![header](https://capsule-render.vercel.app/api?type=waving&height=300&color=gradient&text=Color%20Picker%20DMS&fontSize=50&animation=fadeIn&fontAlign=49&fontAlignY=32&desc=A%20DankMaterialShell/DankBar%20widget%20for%20picking%20colors%20from%20the%20screen&descAlignY=48)
+![Color Picker DMS](./assets/Banner01.png)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/bernardopg/color-picker-dms/ci.yml?branch=main&label=CI&style=flat-square)](https://github.com/bernardopg/color-picker-dms/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/tag/bernardopg/color-picker-dms?label=Release&style=flat-square)](https://github.com/bernardopg/color-picker-dms/releases)
 [![License](https://img.shields.io/github/license/bernardopg/color-picker-dms?style=flat-square)](LICENSE)
 [![Crowdin](https://badges.crowdin.net/color-picker-dms/localized.svg)](https://crowdin.com/project/color-picker-dms)
-
-![Color Picker DMS](./assets/Banner01.png)
 
 </div>
 
