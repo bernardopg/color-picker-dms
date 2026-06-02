@@ -4,6 +4,7 @@
 
 - Add Crowdin CLI configuration and GitHub Actions sync workflows.
 - Load Crowdin-downloaded locale bundles automatically from `i18n/<locale>.json`.
+- Add Arabic, Brazilian Portuguese, Chinese Simplified, French, German, Italian, Japanese, Russian, and Spanish translations.
 - Validate all shipped i18n JSON bundles in CI.
 
 ## 1.0.0

@@ -79,6 +79,18 @@ Translations are managed in Crowdin:
 
 The plugin loads Crowdin-downloaded bundles automatically based on the current Qt locale. English remains the fallback for missing files or missing keys.
 
+Bundled translations:
+
+- Arabic (`ar_SA`)
+- Brazilian Portuguese (`pt_BR`)
+- Chinese Simplified (`zh_CN`)
+- French (`fr_FR`)
+- German (`de_DE`)
+- Italian (`it_IT`)
+- Japanese (`ja_JP`)
+- Russian (`ru_RU`)
+- Spanish (`es_ES`)
+
 GitHub Actions includes two Crowdin workflows:
 
 - `Crowdin Upload` uploads source strings when `i18n/en.json` or `crowdin.yml` changes.

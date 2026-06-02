@@ -30,6 +30,17 @@ QtObject {
     readonly property var fallbackTranslations: loadBundle("en_US")
     readonly property var activeTranslations: loadBundle(normalizedLocale)
     property var bundleCache: ({})
+    readonly property var languageDefaultLocales: ({
+        "ar": "ar_SA",
+        "de": "de_DE",
+        "es": "es_ES",
+        "fr": "fr_FR",
+        "it": "it_IT",
+        "ja": "ja_JP",
+        "pt": "pt_BR",
+        "ru": "ru_RU",
+        "zh": "zh_CN"
+    })
 
     // Normalize Qt/Crowdin locale variants to the file naming convention used
     // by the downloaded bundles. Missing files are handled by loadBundle().
@@ -44,7 +55,7 @@ QtObject {
             return "en_US";
 
         if (parts.length === 1)
-            return language;
+            return root.languageDefaultLocales[language] || language;
 
         const region = parts[1].toUpperCase();
         return language + "_" + region;
