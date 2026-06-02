@@ -51,11 +51,11 @@ Capture backend: install at least one of:
 
 ## Install
 
-##### Option 1
+### Option 1
 
 Download directly from the [DankMaterialShell Plugins](https://danklinux.com/plugins) page <https://danklinux.com/plugins>
 
-##### Option 2
+### Option 2
 
 Download the latest release and extract the `colorPicker` folder into your DMS plugins directory:
 
@@ -66,7 +66,7 @@ chmod +x ~/.config/DankMaterialShell/plugins/colorPicker/capture/pick-color
 dms restart
 ```
 
-##### Option 3
+### Option 3
 
 Clone into the DMS plugins directory:
 
