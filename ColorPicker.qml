@@ -33,8 +33,16 @@ PluginComponent {
 
     readonly property string pluginDir: Qt.resolvedUrl(".").toString().replace("file://", "")
 
+    property int i18nRev: 0
+
     function tr(key, fallback, params) {
+        void root.i18nRev
         return Local.ColorPickerI18n.tr(key, fallback, params)
+    }
+
+    Connections {
+        target: Local.ColorPickerI18n
+        function onLocaleChanged() { root.i18nRev++ }
     }
 
     function _load(key, def) {
@@ -267,10 +275,20 @@ PluginComponent {
     // ── bar pills ────────────────────────────────────────────────────────────
     horizontalBarPill: Component {
         MouseArea {
+            id: hPill
             width: root.barThickness
             height: root.barThickness
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.pickQuick()
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            enabled: !root.picking
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) {
+                    var pt = hPill.mapToItem(Overlay.overlay, mouse.x, mouse.y)
+                    root.showPillMenu(pt.x, pt.y, width, null, null)
+                } else {
+                    root.pickQuick()
+                }
+            }
             DankIcon {
                 name: "colorize"
                 size: Theme.barIconSize(root.barThickness, -2)
@@ -282,10 +300,20 @@ PluginComponent {
 
     verticalBarPill: Component {
         MouseArea {
+            id: vPill
             width: root.barThickness
             height: root.barThickness
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.pickQuick()
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            enabled: !root.picking
+            onClicked: (mouse) => {
+                if (mouse.button === Qt.RightButton) {
+                    var pt = vPill.mapToItem(Overlay.overlay, mouse.x, mouse.y)
+                    root.showPillMenu(pt.x, pt.y, width, null, null)
+                } else {
+                    root.pickQuick()
+                }
+            }
             DankIcon {
                 name: "colorize"
                 size: Theme.barIconSize(root.barThickness, -2)

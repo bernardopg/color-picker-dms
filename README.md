@@ -7,9 +7,9 @@
 [![License](https://img.shields.io/github/license/bernardopg/color-picker-dms?style=flat-square)](LICENSE)
 [![Crowdin](https://badges.crowdin.net/color-picker-dms/localized.svg)](https://crowdin.com/project/color-picker-dms)
 
-</div>
-
 ![Color Picker DMS screenshot](./screenshot.png)
+
+</div>
 
 ## ✨ What It Does
 
@@ -51,6 +51,23 @@ Capture backend: install at least one of:
 
 ## Install
 
+##### Option 1
+
+Download directly from the [DankMaterialShell Plugins](https://danklinux.com/plugins) page <https://danklinux.com/plugins>
+
+##### Option 2
+
+Download the latest release and extract the `colorPicker` folder into your DMS plugins directory:
+
+```bash
+mkdir -p ~/.config/DankMaterialShell/plugins/colorPicker
+unzip color-picker-dms.zip -d ~/.config/DankMaterialShell/plugins/colorPicker
+chmod +x ~/.config/DankMaterialShell/plugins/colorPicker/capture/pick-color
+dms restart
+```
+
+##### Option 3
+
 Clone into the DMS plugins directory:
 
 ```bash
@@ -68,64 +85,7 @@ Then enable the plugin in DMS settings or add it to your DankBar layout.
 - Open the plugin popout/workbench to copy any format, add the current color to the palette, convert typed colors, or inspect contrast.
 - Configure the default copy format and backend from plugin settings.
 
-## Localization
-
-Translations are managed in Crowdin:
-
-- Project: https://crowdin.com/project/color-picker-dms
-- Project ID: `902673`
-- Source file: `i18n/en.json`
-- Downloaded translations: `i18n/%locale_with_underscore%.json`
-
-The plugin loads Crowdin-downloaded bundles automatically based on the current Qt locale. English remains the fallback for missing files or missing keys.
-
-Bundled translations:
-
-- Arabic (`ar_SA`)
-- Brazilian Portuguese (`pt_BR`)
-- Chinese Simplified (`zh_CN`)
-- French (`fr_FR`)
-- German (`de_DE`)
-- Italian (`it_IT`)
-- Japanese (`ja_JP`)
-- Russian (`ru_RU`)
-- Spanish (`es_ES`)
-
-GitHub Actions includes two Crowdin workflows:
-
-- `Crowdin Upload` uploads source strings when `i18n/en.json` or `crowdin.yml` changes.
-- `Crowdin Download` runs manually and opens a PR with translated JSON bundles.
-
-Configure at least one target language in Crowdin before running the download workflow. Until translated strings exist, the Crowdin CLI has no files to export.
-
-Repository secret required for both workflows:
-
-- `CROWDIN_PERSONAL_TOKEN`
-
-Local maintainer commands:
-
-```bash
-crowdin config lint --identity ~/.crowdin.yml
-crowdin upload sources --identity ~/.crowdin.yml
-crowdin download --identity ~/.crowdin.yml --skip-untranslated-strings
-```
-
-## Files
-
-- `plugin.json` — DMS manifest.
-- `ColorPicker.qml` — root `PluginComponent`.
-- `ColorWorkbench.qml` — reusable workbench UI for popout/control center.
-- `ColorPickerSettings.qml` — plugin settings UI.
-- `ColorUtils.js` — color parsing/conversion/WCAG math.
-- `capture/pick-color` — backend wrapper that emits JSON.
-- `i18n/en.json` — source strings.
-- `crowdin.yml` — Crowdin source and translation mapping.
-
-## Repository
-
-GitHub repository name: `color-picker-dms`
-
-DMS plugin id and install directory: `colorPicker`
+<div align="center">
 
 ## 💜 Support
 
@@ -138,3 +98,5 @@ If Color Picker DMS helps your DMS setup, you can support ongoing maintenance th
 Released under the terms in [LICENSE](./LICENSE).
 
 ![footer](https://capsule-render.vercel.app/api?type=waving&height=150&fontAlignY=40&section=footer)
+
+</div>

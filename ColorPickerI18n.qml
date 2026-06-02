@@ -105,12 +105,19 @@ QtObject {
         return text;
     }
 
+    signal localeChanged()
+
     function loadSettings() {
         const stored = PluginService.loadPluginData(root.pluginId, "languageOverride");
-        root.languageOverride = (stored === undefined || stored === null || stored === "") ? "auto" : stored.toString();
+        const newValue = (stored === undefined || stored === null || stored === "") ? "auto" : stored.toString();
+        if (newValue !== root.languageOverride) {
+            root.languageOverride = newValue;
+            // force i18n consumers to re-evaluate translated strings
+            root.localeChanged();
+        }
     }
 
-    property var pluginDataConnection: Connections {
+    Connections {
         target: PluginService
         function onPluginDataChanged(changedPluginId) {
             if (changedPluginId === root.pluginId)

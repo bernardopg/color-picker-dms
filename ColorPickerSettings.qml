@@ -7,8 +7,16 @@ PluginSettings {
 
     pluginId: "colorPicker"
 
+    property int i18nRev: 0
+
     function tr(key, fallback, params) {
+        void i18nRev
         return Local.ColorPickerI18n.tr(key, fallback, params)
+    }
+
+    Connections {
+        target: Local.ColorPickerI18n
+        function onLocaleChanged() { i18nRev++ }
     }
 
     SelectionSetting {
