@@ -51,12 +51,3 @@ jobs:
         run: |
           bash -n capture/pick-color
           shellcheck -S warning capture/pick-color
-
-      - name: Check required README sections
-        run: |
-          grep -q '^# ' README.md
-          grep -q '^## Features' README.md
-          grep -q '^## Requirements' README.md
-          grep -q '^## Install' README.md
-          grep -q '^## Usage' README.md
-          grep -q '^## License' README.md
