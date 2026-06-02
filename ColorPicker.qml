@@ -15,17 +15,18 @@ PluginComponent {
 
     pluginId: "colorPicker"
 
-    // ── persisted settings (read live) ───────────────────────────────────────
+    // ── persisted settings ──────────────────────────────────────────────────
     property string defaultFormat: _load("defaultFormat", "HEX")
     property string backend: _load("backend", "auto")
     property bool lowercaseHex: _load("lowercaseHex", false)
     property bool autoCopy: _load("autoCopy", true)
 
     // ── live state ───────────────────────────────────────────────────────────
-    property var currentRgb: null          // {r,g,b} of the last picked/typed color
+    property var currentRgb: null
     property string lastBackend: ""
     property bool picking: false
-    property var palette: _load("palette", [])   // array of "#RRGGBB"
+    property string popoutMode: "workbench"
+    property var palette: _load("palette", [])
 
     // contrast tab
     property var fgRgb: ({ r: 33, g: 33, b: 33 })
@@ -42,12 +43,16 @@ PluginComponent {
 
     Connections {
         target: Local.ColorPickerI18n
-        function onLocaleChanged() { root.i18nRev++ }
+
+        function onLocaleChanged() {
+            root.i18nRev++
+        }
     }
 
     function _load(key, def) {
         if (typeof PluginService !== "undefined" && PluginService)
             return PluginService.loadPluginData(root.pluginId, key, def)
+
         return def
     }
 
@@ -66,6 +71,7 @@ PluginComponent {
 
     Connections {
         target: typeof PluginService !== "undefined" ? PluginService : null
+
         function onPluginDataChanged(changedPluginId) {
             if (changedPluginId === root.pluginId)
                 root.reloadSettings()
@@ -76,6 +82,7 @@ PluginComponent {
     function copyText(text) {
         const cmd = "printf %s " + _shQuote(text) + " | wl-copy"
         Quickshell.execDetached(["sh", "-c", cmd])
+
         if (typeof ToastService !== "undefined" && ToastService)
             ToastService.showInfo(root.tr("copied", "Copied {value}", { value: text }))
     }
@@ -83,6 +90,7 @@ PluginComponent {
     function lastColorText(format) {
         if (!root.currentRgb)
             return ""
+
         return ColorUtils.format(root.currentRgb, format || root.defaultFormat, root.lowercaseHex)
     }
 
@@ -90,8 +98,10 @@ PluginComponent {
         if (!root.currentRgb) {
             if (typeof ToastService !== "undefined" && ToastService)
                 ToastService.showError(root.tr("noColorYet", "No color picked yet"))
+
             return
         }
+
         root.copyText(root.lastColorText(format || root.defaultFormat))
     }
 
@@ -99,19 +109,27 @@ PluginComponent {
         if (!root.currentRgb) {
             if (typeof ToastService !== "undefined" && ToastService)
                 ToastService.showError(root.tr("noColorYet", "No color picked yet"))
+
             return
         }
-        const lines = ColorUtils.allFormats(root.currentRgb, root.lowercaseHex).map(item => item.key + ": " + item.value)
+
+        const lines = ColorUtils
+            .allFormats(root.currentRgb, root.lowercaseHex)
+            .map(item => item.key + ": " + item.value)
+
         root.copyText(lines.join("\n"))
     }
 
     function copyPalette() {
         const p = root.palette || []
+
         if (p.length === 0) {
             if (typeof ToastService !== "undefined" && ToastService)
                 ToastService.showError(root.tr("paletteEmpty", "Palette is empty"))
+
             return
         }
+
         root.copyText(p.join("\n"))
     }
 
@@ -122,14 +140,18 @@ PluginComponent {
     // ── screen capture ───────────────────────────────────────────────────────
     Process {
         id: pickProcess
+
         running: false
+
         stdout: StdioCollector {
             onStreamFinished: {
                 root._handlePickOutput(text)
             }
         }
+
         onExited: (code, status) => {
             root.picking = false
+
             if (code !== 0)
                 root._pickError()
         }
@@ -137,16 +159,26 @@ PluginComponent {
 
     function _handlePickOutput(rawText) {
         const raw = (rawText || "").trim()
+
         if (raw === "")
             return
+
         try {
             const data = JSON.parse(raw)
+
             if (data.error) {
                 root._pickError()
                 return
             }
-            root.currentRgb = { r: data.r, g: data.g, b: data.b }
+
+            root.currentRgb = {
+                r: data.r,
+                g: data.g,
+                b: data.b
+            }
+
             root.lastBackend = data.backend || ""
+
             if (root.autoCopy)
                 root.copyText(ColorUtils.format(root.currentRgb, root.defaultFormat, root.lowercaseHex))
         } catch (e) {
@@ -161,57 +193,92 @@ PluginComponent {
 
     Timer {
         id: delayedPickTimer
+
         interval: 300
         repeat: false
+
         onTriggered: root._startPickProcess()
     }
 
     function _hidePluginSurfaces() {
         root.closePopout()
+
         if (typeof PopoutService !== "undefined" && PopoutService)
             PopoutService.closeControlCenter()
     }
 
     function _startPickProcess() {
-        pickProcess.command = ["bash", root.pluginDir + "capture/pick-color", "--backend", root.backend]
+        pickProcess.command = [
+            "bash",
+            root.pluginDir + "capture/pick-color",
+            "--backend",
+            root.backend
+        ]
+
         pickProcess.running = true
     }
 
-    // Hide plugin UI first, then capture so the picker can sample anything on screen.
     function pickInteractive() {
         if (root.picking)
             return
+
         root.picking = true
         root._hidePluginSurfaces()
         delayedPickTimer.restart()
     }
 
-    // Capture from the bar pill/control-center: same flow, with hidden plugin UI.
     function pickQuick() {
-        pickInteractive()
+        root.pickInteractive()
+    }
+
+    // ── popout/menu routing ──────────────────────────────────────────────────
+    function _openPluginPopout(mode) {
+        root.popoutMode = mode || "workbench"
+        root.closePopout()
+
+        Qt.callLater(function () {
+            const savedClickAction = root.pillClickAction
+
+            root.pillClickAction = null
+
+            try {
+                root.triggerPopout()
+            } finally {
+                root.pillClickAction = savedClickAction
+            }
+        })
     }
 
     function showPillMenu(x, y, triggerWidth, section, currentScreen) {
-    pillContextMenu.close()
+        root._openPluginPopout("menu")
+    }
 
-    pillContextMenu.x = Math.max(Theme.spacingM, x)
-    pillContextMenu.y = Math.max(Theme.spacingM, y)
-
-    pillContextMenu.open()
-}
+    function openWorkbench() {
+        root._openPluginPopout("workbench")
+    }
 
     // ── palette ──────────────────────────────────────────────────────────────
     function addToPalette() {
         if (!root.currentRgb)
             return
-        const hex = ColorUtils.rgbToHex(root.currentRgb.r, root.currentRgb.g, root.currentRgb.b)
+
+        const hex = ColorUtils.rgbToHex(
+            root.currentRgb.r,
+            root.currentRgb.g,
+            root.currentRgb.b
+        )
+
         let p = (root.palette || []).slice()
+
         if (p.indexOf(hex) === -1) {
             p.unshift(hex)
+
             if (p.length > 24)
                 p = p.slice(0, 24)
+
             root.palette = p
             root._save("palette", p)
+
             if (typeof ToastService !== "undefined" && ToastService)
                 ToastService.showInfo(root.tr("addedToPalette", "Added to palette"))
         }
@@ -219,6 +286,7 @@ PluginComponent {
 
     function removeFromPalette(hex) {
         let p = (root.palette || []).filter(c => c !== hex)
+
         root.palette = p
         root._save("palette", p)
     }
@@ -230,31 +298,57 @@ PluginComponent {
 
     // ── control-center pill ──────────────────────────────────────────────────
     ccWidgetIcon: "colorize"
+
     ccWidgetPrimaryText: root.tr("name", "Color Picker")
+
     ccWidgetSecondaryText: root.currentRgb
         ? ColorUtils.format(root.currentRgb, root.defaultFormat, root.lowercaseHex)
         : root.tr("tab.pick", "Pick")
+
     ccWidgetIsActive: root.currentRgb !== null
-    onCcWidgetToggled: pickQuick()
+
+    onCcWidgetToggled: root.pickQuick()
+
+    // IMPORTANTE:
+    // Não coloque MouseArea dentro da pill.
+    // O BasePill do DMS é quem trata clique esquerdo/direito.
+    pillClickAction: pickQuick
     pillRightClickAction: showPillMenu
 
     ccDetailContent: Component {
         Item {
             implicitHeight: ccCol.implicitHeight
+
             ColorWorkbench {
                 id: ccCol
+
                 width: parent.width
                 controller: root
             }
         }
     }
 
-    // ── popout (full workbench) ──────────────────────────────────────────────
-    popoutWidth: 420
-    popoutHeight: 560
+    // ── popout ───────────────────────────────────────────────────────────────
+    popoutWidth: root.popoutMode === "menu" ? 280 : 420
+    popoutHeight: root.popoutMode === "menu" ? 410 : 560
+
     popoutContent: Component {
+        Loader {
+            width: parent ? parent.width : root.popoutWidth
+            height: root.popoutHeight
+
+            sourceComponent: root.popoutMode === "menu"
+                ? menuPopoutComponent
+                : workbenchPopoutComponent
+        }
+    }
+
+    Component {
+        id: workbenchPopoutComponent
+
         PopoutComponent {
             id: popoutComp
+
             headerText: root.tr("name", "Color Picker")
             detailsText: root.lastBackend ? root.lastBackend : ""
             showCloseButton: true
@@ -267,6 +361,7 @@ PluginComponent {
 
                 ColorWorkbench {
                     id: wb
+
                     width: parent.width
                     controller: root
                 }
@@ -274,23 +369,127 @@ PluginComponent {
         }
     }
 
-    // ── bar pills ────────────────────────────────────────────────────────────
-    horizontalBarPill: Component {
-        MouseArea {
-            id: hPill
-            width: root.barThickness
-            height: root.barThickness
-            cursorShape: Qt.PointingHandCursor
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
-            enabled: !root.picking
-            onClicked: (mouse) => {
-                if (mouse.button === Qt.RightButton) {
-                    var pt = hPill.mapToItem(Overlay.overlay, mouse.x, mouse.y)
-                    root.showPillMenu(pt.x, pt.y, width, null, null)
-                } else {
-                    root.pickQuick()
+    Component {
+        id: menuPopoutComponent
+
+        PopoutComponent {
+            id: menuPopout
+
+            headerText: root.tr("name", "Color Picker")
+
+            detailsText: root.currentRgb
+                ? root.lastColorText(root.defaultFormat)
+                : root.tr("noColorYet", "No color picked yet")
+
+            showCloseButton: true
+
+            Column {
+                width: parent.width
+                spacing: Theme.spacingXS
+
+                PillMenuAction {
+                    iconName: "colorize"
+                    label: root.picking
+                        ? root.tr("picking", "Picking…")
+                        : root.tr("pickColor", "Pick Color")
+                    enabled: !root.picking
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.pickInteractive()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "content_copy"
+                    label: root.tr("copyLast", "Copy last color")
+                    hint: root.currentRgb
+                        ? root.lastColorText(root.defaultFormat)
+                        : root.tr("noColorYet", "No color picked yet")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.copyLastColor(root.defaultFormat)
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "tag"
+                    label: root.tr("copyHex", "Copy HEX")
+                    hint: root.currentRgb ? root.lastColorText("HEX") : ""
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.copyLastColor("HEX")
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "palette"
+                    label: root.tr("copyRgb", "Copy RGB")
+                    hint: root.currentRgb ? root.lastColorText("RGB") : ""
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.copyLastColor("RGB")
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "format_list_bulleted"
+                    label: root.tr("copyAllFormats", "Copy all formats")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.copyAllFormats()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "playlist_add"
+                    label: root.tr("addToPalette", "Add to palette")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.addToPalette()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "inventory_2"
+                    label: root.tr("copyPalette", "Copy palette")
+                    hint: (root.palette || []).length + " " + root.tr("colors", "colors")
+                    enabled: (root.palette || []).length > 0
+
+                    onTriggered: {
+                        root.closePopout()
+                        root.copyPalette()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "tune"
+                    label: root.tr("openWorkbench", "Open workbench")
+
+                    onTriggered: {
+                        root.openWorkbench()
+                    }
                 }
             }
+        }
+    }
+
+    // ── bar pills ────────────────────────────────────────────────────────────
+    horizontalBarPill: Component {
+        Item {
+            width: root.barThickness
+            height: root.barThickness
+
             DankIcon {
                 name: "colorize"
                 size: Theme.barIconSize(root.barThickness, -2)
@@ -314,121 +513,7 @@ PluginComponent {
         }
     }
 
-    Popup {
-        id: pillContextMenu
-
-        parent: Overlay.overlay
-        width: 252
-        height: menuColumn.implicitHeight + Theme.spacingM * 2
-        padding: 0
-        modal: true
-        dim: false
-        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-
-        background: Rectangle {
-            color: "transparent"
-        }
-
-        contentItem: StyledRect {
-            radius: Theme.cornerRadius
-            color: Theme.surfaceContainer
-            border.color: Theme.outlineMedium
-            border.width: 1
-
-            Column {
-                id: menuColumn
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.margins: Theme.spacingM
-                spacing: Theme.spacingXS
-
-                PillMenuAction {
-                    iconName: "colorize"
-                    label: root.picking ? root.tr("picking", "Picking…") : root.tr("pickColor", "Pick Color")
-                    enabled: !root.picking
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.pickInteractive()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "content_copy"
-                    label: root.tr("copyLast", "Copy last color")
-                    hint: root.currentRgb ? root.lastColorText(root.defaultFormat) : root.tr("noColorYet", "No color picked yet")
-                    enabled: root.currentRgb !== null
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.copyLastColor(root.defaultFormat)
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "tag"
-                    label: root.tr("copyHex", "Copy HEX")
-                    hint: root.currentRgb ? root.lastColorText("HEX") : ""
-                    enabled: root.currentRgb !== null
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.copyLastColor("HEX")
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "palette"
-                    label: root.tr("copyRgb", "Copy RGB")
-                    hint: root.currentRgb ? root.lastColorText("RGB") : ""
-                    enabled: root.currentRgb !== null
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.copyLastColor("RGB")
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "format_list_bulleted"
-                    label: root.tr("copyAllFormats", "Copy all formats")
-                    enabled: root.currentRgb !== null
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.copyAllFormats()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "playlist_add"
-                    label: root.tr("addToPalette", "Add to palette")
-                    enabled: root.currentRgb !== null
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.addToPalette()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "inventory_2"
-                    label: root.tr("copyPalette", "Copy palette")
-                    hint: (root.palette || []).length + " " + root.tr("colors", "colors")
-                    enabled: (root.palette || []).length > 0
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.copyPalette()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "tune"
-                    label: root.tr("openWorkbench", "Open workbench")
-                    onTriggered: {
-                        pillContextMenu.close()
-                        root.triggerPopout()
-                    }
-                }
-            }
-        }
-    }
-
+    // ── reusable menu action ─────────────────────────────────────────────────
     component PillMenuAction: StyledRect {
         id: action
 
@@ -436,12 +521,15 @@ PluginComponent {
         property string label: ""
         property string hint: ""
         property bool enabled: true
+
         signal triggered
 
         width: parent ? parent.width : 220
         height: hint.length > 0 ? 48 : 38
         radius: Theme.cornerRadius
-        color: actionMouse.containsMouse && action.enabled ? Theme.surfaceContainerHigh : Theme.surfaceContainer
+        color: actionMouse.containsMouse && action.enabled
+            ? Theme.surfaceContainerHigh
+            : Theme.surfaceContainer
         opacity: action.enabled ? 1.0 : 0.45
 
         RowLayout {
@@ -484,10 +572,12 @@ PluginComponent {
 
         MouseArea {
             id: actionMouse
+
             anchors.fill: parent
             hoverEnabled: true
             cursorShape: action.enabled ? Qt.PointingHandCursor : Qt.ArrowCursor
             acceptedButtons: Qt.LeftButton
+
             onClicked: {
                 if (action.enabled)
                     action.triggered()
