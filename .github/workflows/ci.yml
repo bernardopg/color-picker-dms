@@ -35,7 +35,7 @@ jobs:
             jq --exit-status . "$file" >/dev/null
           done < <(find i18n -name '*.json' -type f | sort)
 
-          test "$(jq -r '.id' plugin.json)" = "colorPicker"
+          test "$(jq -r '.id' plugin.json)" = "colorPickerDms"
           test "$(jq -r '.type' plugin.json)" = "widget"
           test "$(jq -r '.component' plugin.json)" = "./ColorPicker.qml"
           test "$(jq -r '.settings' plugin.json)" = "./ColorPickerSettings.qml"
