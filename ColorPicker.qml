@@ -15,18 +15,17 @@ PluginComponent {
 
     pluginId: "colorPicker"
 
-    // ── persisted settings ──────────────────────────────────────────────────
+    // ── persisted settings (read live) ───────────────────────────────────────
     property string defaultFormat: _load("defaultFormat", "HEX")
     property string backend: _load("backend", "auto")
     property bool lowercaseHex: _load("lowercaseHex", false)
     property bool autoCopy: _load("autoCopy", true)
 
     // ── live state ───────────────────────────────────────────────────────────
-    property var currentRgb: null
+    property var currentRgb: null          // {r,g,b} of the last picked/typed color
     property string lastBackend: ""
     property bool picking: false
-    property string popoutMode: "workbench"
-    property var palette: _load("palette", [])
+    property var palette: _load("palette", [])   // array of "#RRGGBB"
 
     // contrast tab
     property var fgRgb: ({ r: 33, g: 33, b: 33 })
@@ -205,6 +204,8 @@ PluginComponent {
 
         if (typeof PopoutService !== "undefined" && PopoutService)
             PopoutService.closeControlCenter()
+
+        pillContextMenu.close()
     }
 
     function _startPickProcess() {
@@ -218,6 +219,7 @@ PluginComponent {
         pickProcess.running = true
     }
 
+    // Hide plugin UI first, then capture so the picker can sample anything on screen.
     function pickInteractive() {
         if (root.picking)
             return
@@ -227,34 +229,18 @@ PluginComponent {
         delayedPickTimer.restart()
     }
 
+    // Capture from the bar pill/control-center: same flow, with hidden plugin UI.
     function pickQuick() {
         root.pickInteractive()
     }
 
-    // ── popout/menu routing ──────────────────────────────────────────────────
-    function _openPluginPopout(mode) {
-        root.popoutMode = mode || "workbench"
-        root.closePopout()
-
-        Qt.callLater(function () {
-            const savedClickAction = root.pillClickAction
-
-            root.pillClickAction = null
-
-            try {
-                root.triggerPopout()
-            } finally {
-                root.pillClickAction = savedClickAction
-            }
-        })
-    }
-
     function showPillMenu(x, y, triggerWidth, section, currentScreen) {
-        root._openPluginPopout("menu")
-    }
+        pillContextMenu.close()
 
-    function openWorkbench() {
-        root._openPluginPopout("workbench")
+        pillContextMenu.x = Math.max(Theme.spacingM, x)
+        pillContextMenu.y = Math.max(Theme.spacingM, y)
+
+        pillContextMenu.open()
     }
 
     // ── palette ──────────────────────────────────────────────────────────────
@@ -309,9 +295,8 @@ PluginComponent {
 
     onCcWidgetToggled: root.pickQuick()
 
-    // IMPORTANTE:
-    // Não coloque MouseArea dentro da pill.
-    // O BasePill do DMS é quem trata clique esquerdo/direito.
+    // O BasePill do DMS gerencia os cliques.
+    // Não coloque MouseArea dentro de horizontalBarPill/verticalBarPill.
     pillClickAction: pickQuick
     pillRightClickAction: showPillMenu
 
@@ -328,24 +313,11 @@ PluginComponent {
         }
     }
 
-    // ── popout ───────────────────────────────────────────────────────────────
-    popoutWidth: root.popoutMode === "menu" ? 280 : 420
-    popoutHeight: root.popoutMode === "menu" ? 410 : 560
+    // ── popout (full workbench) ──────────────────────────────────────────────
+    popoutWidth: 420
+    popoutHeight: 560
 
     popoutContent: Component {
-        Loader {
-            width: parent ? parent.width : root.popoutWidth
-            height: root.popoutHeight
-
-            sourceComponent: root.popoutMode === "menu"
-                ? menuPopoutComponent
-                : workbenchPopoutComponent
-        }
-    }
-
-    Component {
-        id: workbenchPopoutComponent
-
         PopoutComponent {
             id: popoutComp
 
@@ -364,121 +336,6 @@ PluginComponent {
 
                     width: parent.width
                     controller: root
-                }
-            }
-        }
-    }
-
-    Component {
-        id: menuPopoutComponent
-
-        PopoutComponent {
-            id: menuPopout
-
-            headerText: root.tr("name", "Color Picker")
-
-            detailsText: root.currentRgb
-                ? root.lastColorText(root.defaultFormat)
-                : root.tr("noColorYet", "No color picked yet")
-
-            showCloseButton: true
-
-            Column {
-                width: parent.width
-                spacing: Theme.spacingXS
-
-                PillMenuAction {
-                    iconName: "colorize"
-                    label: root.picking
-                        ? root.tr("picking", "Picking…")
-                        : root.tr("pickColor", "Pick Color")
-                    enabled: !root.picking
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.pickInteractive()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "content_copy"
-                    label: root.tr("copyLast", "Copy last color")
-                    hint: root.currentRgb
-                        ? root.lastColorText(root.defaultFormat)
-                        : root.tr("noColorYet", "No color picked yet")
-                    enabled: root.currentRgb !== null
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.copyLastColor(root.defaultFormat)
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "tag"
-                    label: root.tr("copyHex", "Copy HEX")
-                    hint: root.currentRgb ? root.lastColorText("HEX") : ""
-                    enabled: root.currentRgb !== null
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.copyLastColor("HEX")
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "palette"
-                    label: root.tr("copyRgb", "Copy RGB")
-                    hint: root.currentRgb ? root.lastColorText("RGB") : ""
-                    enabled: root.currentRgb !== null
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.copyLastColor("RGB")
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "format_list_bulleted"
-                    label: root.tr("copyAllFormats", "Copy all formats")
-                    enabled: root.currentRgb !== null
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.copyAllFormats()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "playlist_add"
-                    label: root.tr("addToPalette", "Add to palette")
-                    enabled: root.currentRgb !== null
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.addToPalette()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "inventory_2"
-                    label: root.tr("copyPalette", "Copy palette")
-                    hint: (root.palette || []).length + " " + root.tr("colors", "colors")
-                    enabled: (root.palette || []).length > 0
-
-                    onTriggered: {
-                        root.closePopout()
-                        root.copyPalette()
-                    }
-                }
-
-                PillMenuAction {
-                    iconName: "tune"
-                    label: root.tr("openWorkbench", "Open workbench")
-
-                    onTriggered: {
-                        root.openWorkbench()
-                    }
                 }
             }
         }
@@ -513,7 +370,135 @@ PluginComponent {
         }
     }
 
-    // ── reusable menu action ─────────────────────────────────────────────────
+    // ── right-click context menu ─────────────────────────────────────────────
+    Popup {
+        id: pillContextMenu
+
+        parent: Overlay.overlay
+        width: 252
+        height: menuColumn.implicitHeight + Theme.spacingM * 2
+        padding: 0
+        modal: true
+        dim: false
+        closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+        background: Rectangle {
+            color: "transparent"
+        }
+
+        contentItem: StyledRect {
+            radius: Theme.cornerRadius
+            color: Theme.surfaceContainer
+            border.color: Theme.outlineMedium
+            border.width: 1
+
+            Column {
+                id: menuColumn
+
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.margins: Theme.spacingM
+                spacing: Theme.spacingXS
+
+                PillMenuAction {
+                    iconName: "colorize"
+                    label: root.picking
+                        ? root.tr("picking", "Picking…")
+                        : root.tr("pickColor", "Pick Color")
+                    enabled: !root.picking
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.pickInteractive()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "content_copy"
+                    label: root.tr("copyLast", "Copy last color")
+                    hint: root.currentRgb
+                        ? root.lastColorText(root.defaultFormat)
+                        : root.tr("noColorYet", "No color picked yet")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.copyLastColor(root.defaultFormat)
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "tag"
+                    label: root.tr("copyHex", "Copy HEX")
+                    hint: root.currentRgb ? root.lastColorText("HEX") : ""
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.copyLastColor("HEX")
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "palette"
+                    label: root.tr("copyRgb", "Copy RGB")
+                    hint: root.currentRgb ? root.lastColorText("RGB") : ""
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.copyLastColor("RGB")
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "format_list_bulleted"
+                    label: root.tr("copyAllFormats", "Copy all formats")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.copyAllFormats()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "playlist_add"
+                    label: root.tr("addToPalette", "Add to palette")
+                    enabled: root.currentRgb !== null
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.addToPalette()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "inventory_2"
+                    label: root.tr("copyPalette", "Copy palette")
+                    hint: (root.palette || []).length + " " + root.tr("colors", "colors")
+                    enabled: (root.palette || []).length > 0
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.copyPalette()
+                    }
+                }
+
+                PillMenuAction {
+                    iconName: "tune"
+                    label: root.tr("openWorkbench", "Open workbench")
+
+                    onTriggered: {
+                        pillContextMenu.close()
+                        root.triggerPopout()
+                    }
+                }
+            }
+        }
+    }
+
     component PillMenuAction: StyledRect {
         id: action
 
