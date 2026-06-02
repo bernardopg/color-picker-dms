@@ -13,7 +13,7 @@ import qs.Services
 QtObject {
     id: root
 
-    readonly property string pluginId: "colorPicker"
+    readonly property string pluginId: "colorPickerDms"
 
     // "auto" follows the system locale; any other value forces that locale.
     property string languageOverride: "auto"
@@ -117,7 +117,9 @@ QtObject {
         }
     }
 
-    Connections {
+    // QtObject has no default property, so the Connections must be bound to a
+    // named property rather than declared as an anonymous child.
+    property Connections _pluginDataConn: Connections {
         target: PluginService
         function onPluginDataChanged(changedPluginId) {
             if (changedPluginId === root.pluginId)

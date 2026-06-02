@@ -5,7 +5,7 @@ import "." as Local
 PluginSettings {
     id: settings
 
-    pluginId: "colorPicker"
+    pluginId: "colorPickerDms"
 
     property int i18nRev: 0
 

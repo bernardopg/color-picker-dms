@@ -11,11 +11,11 @@
 
 ## ✨ What It Does
 
-Color Picker DMS is a DankMaterialShell plugin that lets you pick colors from the screen and copy them in various formats. It provides a quick-pick pill for instant color capture, a right-click menu for common actions, and a full-featured popout workbench for manual picking, conversion, palette management, and contrast checking.
+Color Picker DMS is a DankMaterialShell plugin that lets you pick colors from the screen and copy them in various formats. Left-click the DankBar pill to open a full-featured popout workbench (manual picking, conversion, palette management, contrast checking); right-click for a quick-actions menu including the screen eyedropper.
 
 ## Features
 
-- DankBar pill quick-pick.
+- DankBar pill: left-click opens the workbench popout, right-click opens the quick-actions menu.
 - Right-click DankBar pill menu:
   - pick color with the eyedropper
   - copy last color
@@ -55,12 +55,12 @@ Download directly from the [DankMaterialShell Plugins](https://danklinux.com/plu
 
 ### Option 2
 
-Download the latest release and extract the `colorPicker` folder into your DMS plugins directory:
+Download the latest release and extract the `colorPickerDms` folder into your DMS plugins directory:
 
 ```bash
-mkdir -p ~/.config/DankMaterialShell/plugins/colorPicker
-unzip color-picker-dms.zip -d ~/.config/DankMaterialShell/plugins/colorPicker
-chmod +x ~/.config/DankMaterialShell/plugins/colorPicker/capture/pick-color
+mkdir -p ~/.config/DankMaterialShell/plugins/colorPickerDms
+unzip color-picker-dms.zip -d ~/.config/DankMaterialShell/plugins/colorPickerDms
+chmod +x ~/.config/DankMaterialShell/plugins/colorPickerDms/capture/pick-color
 dms restart
 ```
 
@@ -69,8 +69,8 @@ dms restart
 Clone into the DMS plugins directory:
 
 ```bash
-git clone https://github.com/bernardopg/color-picker-dms.git ~/.config/DankMaterialShell/plugins/colorPicker
-chmod +x ~/.config/DankMaterialShell/plugins/colorPicker/capture/pick-color
+git clone https://github.com/bernardopg/color-picker-dms.git ~/.config/DankMaterialShell/plugins/colorPickerDms
+chmod +x ~/.config/DankMaterialShell/plugins/colorPickerDms/capture/pick-color
 dms restart
 ```
 
@@ -78,10 +78,10 @@ Then enable the plugin in DMS settings or add it to your DankBar layout.
 
 ## Usage
 
-- Left-click the DankBar icon to pick a screen color and auto-copy the configured format.
-- Right-click the DankBar icon to open the quick actions menu.
-- Open the plugin popout/workbench to copy any format, add the current color to the palette, convert typed colors, or inspect contrast.
-- Configure the default copy format and backend from plugin settings.
+- Left-click the DankBar icon to open the workbench popout (pick, convert, palette, contrast).
+- Right-click the DankBar icon to open the quick actions menu (eyedropper + copy/palette actions).
+- Use the workbench "Pick Color" button or the right-click "Pick Color" entry to sample a screen color; with auto-copy on, the configured format is copied immediately.
+- Configure the default copy format, backend, auto-copy, lowercase hex, and language from plugin settings.
 
 <div align="center">
 
