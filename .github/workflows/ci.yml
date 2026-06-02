@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install validation tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends jq shellcheck
+
+      - name: Validate manifest and JSON
+        run: |
+          jq --exit-status . plugin.json >/dev/null
+          jq --exit-status . i18n/en.json >/dev/null
+
+          test "$(jq -r '.id' plugin.json)" = "colorPicker"
+          test "$(jq -r '.type' plugin.json)" = "widget"
+          test "$(jq -r '.component' plugin.json)" = "./ColorPicker.qml"
+          test "$(jq -r '.settings' plugin.json)" = "./ColorPickerSettings.qml"
+          test -f ColorPicker.qml
+          test -f ColorPickerSettings.qml
+          test -f ColorWorkbench.qml
+          test -f ColorUtils.js
+          test -f qmldir
+          test -x capture/pick-color
+
+          VERSION="$(jq -r '.version' plugin.json)"
+          echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'
+
+      - name: Validate shell helper
+        run: |
+          bash -n capture/pick-color
+          shellcheck -S warning capture/pick-color
+
+      - name: Check required README sections
+        run: |
+          grep -q '^# ' README.md
+          grep -q '^## Features' README.md
+          grep -q '^## Requirements' README.md
+          grep -q '^## Install' README.md
+          grep -q '^## Usage' README.md
+          grep -q '^## License' README.md

@@ -1,0 +1,83 @@
+name: Bug report
+description: Report a reproducible Color Picker DMS problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug. Please include enough local evidence to reproduce or isolate the failure.
+  - type: input
+    id: version
+    attributes:
+      label: Plugin version
+      description: The version from plugin.json, release tag, or commit SHA.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - DankBar pill
+        - Right-click menu
+        - Control-center widget
+        - Popout workbench
+        - Capture backend
+        - Settings UI
+        - Installation
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: DMS/Quickshell version, compositor, distro, and relevant capture backend versions.
+      placeholder: |
+        DMS:
+        Quickshell:
+        Compositor:
+        Distro:
+        Backend: hyprpicker / grim+slurp / dms color pick
+        wl-copy:
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List exact commands, settings, and interactions.
+      placeholder: |
+        1. Enable colorPicker...
+        2. Click/right-click the DankBar pill...
+        3. Pick/copy/convert...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include sanitized logs or command output. Do not paste tokens or credentials.
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Local checks
+      description: Paste sanitized output from relevant validation commands.
+      render: shell
+      placeholder: |
+        jq . plugin.json i18n/en.json
+        bash -n capture/pick-color
+        shellcheck -S warning capture/pick-color
+        dms ipc plugins status colorPicker

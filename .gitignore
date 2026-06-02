@@ -1,0 +1,12 @@
+*.swp
+*.swo
+*~
+.DS_Store
+
+.vscode
+.codex
+.claude
+CLAUDE.md
+
+# local DMS/runtime artifacts
+*.log

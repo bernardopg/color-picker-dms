@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and support
+    url: https://github.com/bernardopg/color-picker-dms/discussions
+    about: Use Discussions for setup help, capture backend questions, and general troubleshooting.
+  - name: Security vulnerability
+    url: https://github.com/bernardopg/color-picker-dms/security/advisories/new
+    about: Report vulnerabilities privately instead of opening a public issue.

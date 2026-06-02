@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package:
+    name: Package plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate tag matches plugin.json version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="$(jq -r '.version' plugin.json)"
+          test "$TAG" = "v${VERSION}"
+          echo "TAG=${TAG}" >> "$GITHUB_ENV"
+          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
+          echo "DIST_NAME=colorPicker-${TAG}" >> "$GITHUB_ENV"
+
+      - name: Validate release notes
+        run: |
+          grep -qF "## ${VERSION}" CHANGELOG.md || grep -qF "## [${VERSION}]" CHANGELOG.md
+
+      - name: Build release archives
+        run: |
+          mkdir -p dist
+          git archive --format=zip --prefix="${DIST_NAME}/" -o "dist/${DIST_NAME}.zip" HEAD
+          git archive --format=tar --prefix="${DIST_NAME}/" HEAD | gzip -9 > "dist/${DIST_NAME}.tar.gz"
+          cd dist
+          sha256sum "${DIST_NAME}.zip" "${DIST_NAME}.tar.gz" > "${DIST_NAME}.sha256"
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.TAG }}
+          generate_release_notes: true
+          files: |
+            dist/${{ env.DIST_NAME }}.zip
+            dist/${{ env.DIST_NAME }}.tar.gz
+            dist/${{ env.DIST_NAME }}.sha256

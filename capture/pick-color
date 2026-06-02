@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+#
+# pick-color — capture a screen color and emit it in every supported format.
+#
+# Detects the best available capture backend at runtime, in priority order:
+#   1. hyprpicker   (Wayland, no compositor lock-in, fast)
+#   2. grim + slurp (Wayland screenshot of a 1x1 region)
+#   3. dms color    (DankMaterialShell native picker)
+#
+# Output: a single JSON object on stdout, e.g.
+#   {"hex":"#1E90FF","r":30,"g":144,"b":255,"hsl":"hsl(210, 100%, 56%)",
+#    "hsv":"hsv(210, 88%, 100%)","cmyk":"cmyk(88%, 44%, 0%, 0%)","backend":"hyprpicker"}
+#
+# On cancel/error: prints a JSON object {"error":"..."} and exits non-zero.
+#
+# Usage: pick-color [--backend auto|hyprpicker|grim|dms]
+#
+set -euo pipefail
+
+PREFERRED_BACKEND="${1:-auto}"
+# Strip a leading "--backend " / "--backend=" so callers can pass either form.
+PREFERRED_BACKEND="${PREFERRED_BACKEND#--backend=}"
+if [ "$PREFERRED_BACKEND" = "--backend" ]; then
+  PREFERRED_BACKEND="${2:-auto}"
+fi
+
+die() {
+  # Emit a machine-readable error and exit. Never leak partial/non-JSON output.
+  printf '{"error":"%s"}\n' "$1"
+  exit 1
+}
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# ── format helpers ───────────────────────────────────────────────────────────
+
+# Normalize an arbitrary "#rgb" / "#rrggbb" / "rrggbb" string to "RRGGBB".
+normalize_hex() {
+  local raw="${1#\#}"
+  raw="$(printf '%s' "$raw" | tr '[:lower:]' '[:upper:]')"
+  if [ "${#raw}" -eq 3 ]; then
+    # Expand shorthand #abc -> #aabbcc
+    raw="${raw:0:1}${raw:0:1}${raw:1:1}${raw:1:1}${raw:2:1}${raw:2:1}"
+  fi
+  case "$raw" in
+    [0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F][0-9A-F]) printf '%s' "$raw" ;;
+    *) return 1 ;;
+  esac
+}
+
+# Emit the full JSON payload from a normalized RRGGBB hex + backend name.
+emit_json() {
+  local hex="$1" backend="$2"
+  local r g b
+  r=$((16#${hex:0:2}))
+  g=$((16#${hex:2:2}))
+  b=$((16#${hex:4:2}))
+
+  # HSL / HSV / CMYK via awk (floating point not available in pure bash).
+  awk -v r="$r" -v g="$g" -v b="$b" -v hex="$hex" -v backend="$backend" 'BEGIN {
+    rf = r / 255.0; gf = g / 255.0; bf = b / 255.0
+    max = rf; if (gf > max) max = gf; if (bf > max) max = bf
+    min = rf; if (gf < min) min = gf; if (bf < min) min = bf
+    d = max - min
+
+    # Hue
+    h = 0
+    if (d > 0) {
+      if (max == rf)      h = 60 * (((gf - bf) / d) % 6)
+      else if (max == gf) h = 60 * (((bf - rf) / d) + 2)
+      else                h = 60 * (((rf - gf) / d) + 4)
+    }
+    if (h < 0) h += 360
+
+    # HSL
+    l = (max + min) / 2.0
+    sl = (d == 0) ? 0 : d / (1 - (2 * l - 1 < 0 ? -(2 * l - 1) : (2 * l - 1)))
+
+    # HSV
+    sv = (max == 0) ? 0 : d / max
+    v = max
+
+    # CMYK
+    k = 1 - max
+    if (k >= 1) { c = 0; m = 0; y = 0 }
+    else {
+      c = (1 - rf - k) / (1 - k)
+      m = (1 - gf - k) / (1 - k)
+      y = (1 - bf - k) / (1 - k)
+    }
+
+    printf "{"
+    printf "\"hex\":\"#%s\",", hex
+    printf "\"r\":%d,\"g\":%d,\"b\":%d,", r, g, b
+    printf "\"hsl\":\"hsl(%d, %d%%, %d%%)\",", (h + 0.5), (sl * 100 + 0.5), (l * 100 + 0.5)
+    printf "\"hsv\":\"hsv(%d, %d%%, %d%%)\",", (h + 0.5), (sv * 100 + 0.5), (v * 100 + 0.5)
+    printf "\"cmyk\":\"cmyk(%d%%, %d%%, %d%%, %d%%)\",", (c * 100 + 0.5), (m * 100 + 0.5), (y * 100 + 0.5), (k * 100 + 0.5)
+    printf "\"backend\":\"%s\"", backend
+    printf "}\n"
+  }'
+}
+
+# ── capture backends ─────────────────────────────────────────────────────────
+
+capture_hyprpicker() {
+  local out
+  out="$(hyprpicker --no-fancy --format=hex 2>/dev/null)" || return 1
+  [ -n "$out" ] || return 1
+  normalize_hex "$out"
+}
+
+capture_grim() {
+  # Pick a 1x1 region with slurp, screenshot it with grim, read the pixel.
+  # Requires ImageMagick (convert) OR the grim PPM fallback parsed by awk.
+  local region rgb
+  region="$(slurp -p 2>/dev/null)" || return 1
+  [ -n "$region" ] || return 1
+
+  if have magick || have convert; then
+    local bin="magick"
+    have magick || bin="convert"
+    rgb="$(grim -g "$region" -t ppm - 2>/dev/null | "$bin" - -format '%[hex:p{0,0}]' info: 2>/dev/null)" || return 1
+    normalize_hex "$rgb"
+    return
+  fi
+
+  # The PPM header length varies, but a 1x1 P6 image always ends with the
+  # three RGB bytes for the selected pixel.
+  rgb="$(grim -g "$region" -t ppm - 2>/dev/null | tail -c 3 | od -An -tu1 -N 3 2>/dev/null | awk '{ printf "%02X%02X%02X", $1, $2, $3 }')" || return 1
+  normalize_hex "$rgb"
+}
+
+capture_dms() {
+  local out
+  out="$(dms color pick --hex 2>/dev/null)" || return 1
+  [ -n "$out" ] || return 1
+  normalize_hex "$out"
+}
+
+# ── backend selection ────────────────────────────────────────────────────────
+
+try_backend() {
+  case "$1" in
+    hyprpicker) have hyprpicker && capture_hyprpicker && return 0 ;;
+    grim)       have grim && have slurp && capture_grim && return 0 ;;
+    dms)        have dms && capture_dms && return 0 ;;
+  esac
+  return 1
+}
+
+main() {
+  local hex="" backend=""
+
+  if [ "$PREFERRED_BACKEND" != "auto" ]; then
+    if hex="$(try_backend "$PREFERRED_BACKEND")"; then
+      backend="$PREFERRED_BACKEND"
+    fi
+  fi
+
+  if [ -z "$hex" ]; then
+    local b
+    for b in hyprpicker grim dms; do
+      if hex="$(try_backend "$b")"; then
+        backend="$b"
+        break
+      fi
+    done
+  fi
+
+  [ -n "$hex" ] || die "no capture backend available or capture cancelled (install hyprpicker, or grim+slurp, or use dms)"
+  emit_json "$hex" "$backend"
+}
+
+main
