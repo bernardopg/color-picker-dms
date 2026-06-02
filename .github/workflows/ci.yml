@@ -44,7 +44,7 @@ jobs:
           test -f ColorWorkbench.qml
           test -f ColorUtils.js
           test -f qmldir
-          test -f crowdin.yml
+          test -f workflows/crowdin.yml
           test -x capture/pick-color
 
           VERSION="$(jq -r '.version' plugin.json)"
