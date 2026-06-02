@@ -7,7 +7,7 @@
 [![License](https://img.shields.io/github/license/bernardopg/color-picker-dms?style=flat-square)](LICENSE)
 [![Crowdin](https://badges.crowdin.net/color-picker-dms/localized.svg)](https://crowdin.com/project/color-picker-dms)
 
-![Color Picker DMS screenshot](./screenshot.png)
+![Color Picker DMS](./assets/Banner01.png)
 
 </div>
 
