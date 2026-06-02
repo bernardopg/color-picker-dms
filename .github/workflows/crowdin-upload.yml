@@ -1,0 +1,36 @@
+name: Crowdin Upload
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - crowdin.yml
+      - i18n/en.json
+      - .github/workflows/crowdin-upload.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upload-sources:
+    name: Upload source strings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Upload sources to Crowdin
+        uses: crowdin/github-action@v2.16.2
+        with:
+          upload_sources: true
+          upload_translations: false
+          download_translations: false
+          upload_sources_args: --delete-obsolete
+        env:
+          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}

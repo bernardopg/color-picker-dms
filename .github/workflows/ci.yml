@@ -31,7 +31,9 @@ jobs:
       - name: Validate manifest and JSON
         run: |
           jq --exit-status . plugin.json >/dev/null
-          jq --exit-status . i18n/en.json >/dev/null
+          while IFS= read -r file; do
+            jq --exit-status . "$file" >/dev/null
+          done < <(find i18n -name '*.json' -type f | sort)
 
           test "$(jq -r '.id' plugin.json)" = "colorPicker"
           test "$(jq -r '.type' plugin.json)" = "widget"
@@ -42,6 +44,7 @@ jobs:
           test -f ColorWorkbench.qml
           test -f ColorUtils.js
           test -f qmldir
+          test -f crowdin.yml
           test -x capture/pick-color
 
           VERSION="$(jq -r '.version' plugin.json)"

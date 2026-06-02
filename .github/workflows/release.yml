@@ -26,9 +26,11 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           VERSION="$(jq -r '.version' plugin.json)"
           test "$TAG" = "v${VERSION}"
-          echo "TAG=${TAG}" >> "$GITHUB_ENV"
-          echo "VERSION=${VERSION}" >> "$GITHUB_ENV"
-          echo "DIST_NAME=colorPicker-${TAG}" >> "$GITHUB_ENV"
+          {
+            echo "TAG=${TAG}"
+            echo "VERSION=${VERSION}"
+            echo "DIST_NAME=colorPicker-${TAG}"
+          } >> "$GITHUB_ENV"
 
       - name: Validate release notes
         run: |

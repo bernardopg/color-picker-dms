@@ -8,8 +8,8 @@ import qs.Services
 // Translations live as flat JSON bundles in i18n/<locale>.json. English
 // (i18n/en.json) is always present as the universal fallback: any key
 // missing from a translated bundle falls back to English, then to the inline
-// default passed to tr(). Add new i18n/<locale>.json files and extend
-// localeBundles below when a new target language is published.
+// default passed to tr(). Crowdin exports locale files with underscores
+// (for example i18n/pt_BR.json), matching the normalized Qt locale.
 QtObject {
     id: root
 
@@ -26,40 +26,34 @@ QtObject {
         }
     }
 
-    // Maps a normalized locale (pt_BR, zh_CN, ...) to its bundle filename.
-    // English is implicit (en.json) and always present as the fallback.
-    readonly property var localeBundles: ({
-        // "pt_BR": "i18n/pt_BR.json",
-        // "zh_CN": "i18n/zh_CN.json",
-    })
-
     readonly property string normalizedLocale: normalizeLocale(languageOverride === "auto" ? localeName : languageOverride)
     readonly property var fallbackTranslations: loadBundle("en_US")
     readonly property var activeTranslations: loadBundle(normalizedLocale)
     property var bundleCache: ({})
 
-    // Collapse a raw locale string to a bundle key we actually ship. Unknown
-    // locales degrade to en_US so the plugin is never left without strings.
+    // Normalize Qt/Crowdin locale variants to the file naming convention used
+    // by the downloaded bundles. Missing files are handled by loadBundle().
     function normalizeLocale(value) {
         const raw = (value || "en_US").toString().replace("-", "_").trim();
         if (!raw)
             return "en_US";
-        // Exact match on a shipped bundle (e.g. "pt_BR").
-        if (root.localeBundles[raw] !== undefined)
-            return raw;
-        // Language-only prefix match (e.g. "pt" -> first pt_* bundle).
-        const lang = raw.split("_")[0].toLowerCase();
-        for (const key in root.localeBundles) {
-            if (key.toLowerCase().indexOf(lang) === 0)
-                return key;
-        }
-        return "en_US";
+
+        const parts = raw.split("_").filter(function(part) { return part.length > 0 });
+        const language = parts.length > 0 ? parts[0].toLowerCase() : "en";
+        if (language === "en")
+            return "en_US";
+
+        if (parts.length === 1)
+            return language;
+
+        const region = parts[1].toUpperCase();
+        return language + "_" + region;
     }
 
     function bundleFile(locale) {
         if (locale === "en_US")
             return "i18n/en.json";
-        return root.localeBundles[locale] || "i18n/en.json";
+        return "i18n/" + locale + ".json";
     }
 
     function loadBundle(locale) {
