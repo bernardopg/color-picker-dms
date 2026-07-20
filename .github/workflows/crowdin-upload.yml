@@ -26,7 +26,7 @@ jobs:
           persist-credentials: false
 
       - name: Upload sources to Crowdin
-        uses: crowdin/github-action@v2.16.3
+        uses: crowdin/github-action@v2.16.4
         with:
           config: .github/crowdin.yml
           upload_sources: true
