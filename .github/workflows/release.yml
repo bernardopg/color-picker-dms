@@ -45,7 +45,7 @@ jobs:
           sha256sum "${DIST_NAME}.zip" "${DIST_NAME}.tar.gz" > "${DIST_NAME}.sha256"
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v3.0.3
         with:
           name: ${{ env.TAG }}
           generate_release_notes: true

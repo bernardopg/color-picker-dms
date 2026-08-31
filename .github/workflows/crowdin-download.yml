@@ -21,8 +21,9 @@ jobs:
           persist-credentials: false
 
       - name: Download translations from Crowdin
-        uses: crowdin/github-action@v3.0.0
+        uses: crowdin/github-action@v3.0.1
         with:
+          config: .github/crowdin.yml
           upload_sources: false
           upload_translations: false
           download_translations: true
