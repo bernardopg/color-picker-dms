@@ -67,15 +67,20 @@ PluginSettings {
         defaultValue: "auto"
         options: [
             { value: "auto", label: "Auto" },
-            { value: "en_US", label: "English" },
             { value: "ar_SA", label: "العربية" },
+            { value: "bn_BD", label: "বাংলা" },
             { value: "de_DE", label: "Deutsch" },
+            { value: "en_US", label: "English" },
             { value: "es_ES", label: "Español" },
             { value: "fr_FR", label: "Français" },
+            { value: "hi_IN", label: "हिन्दी" },
+            { value: "id_ID", label: "Bahasa Indonesia" },
             { value: "it_IT", label: "Italiano" },
             { value: "ja_JP", label: "日本語" },
             { value: "pt_BR", label: "Português (Brasil)" },
             { value: "ru_RU", label: "Русский" },
+            { value: "tr_TR", label: "Türkçe" },
+            { value: "ur_PK", label: "اردو" },
             { value: "zh_CN", label: "简体中文" }
         ]
     }

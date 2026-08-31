@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add 5 more of the world's most spoken languages: Hindi, Bengali, Urdu,
+  Indonesian and Turkish — 61/61 keys each, registered in the language selector
+  and in the locale fallback map (14 bundles total).
 - Palette chips: hex code left-aligned inside the cell, copy/remove buttons
   anchored to the right edge.
 - Popout content now sits on a symmetric horizontal inset that matches the

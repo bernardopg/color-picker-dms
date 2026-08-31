@@ -32,13 +32,18 @@ QtObject {
     property var bundleCache: ({})
     readonly property var languageDefaultLocales: ({
         "ar": "ar_SA",
+        "bn": "bn_BD",
         "de": "de_DE",
         "es": "es_ES",
         "fr": "fr_FR",
+        "hi": "hi_IN",
+        "id": "id_ID",
         "it": "it_IT",
         "ja": "ja_JP",
         "pt": "pt_BR",
         "ru": "ru_RU",
+        "tr": "tr_TR",
+        "ur": "ur_PK",
         "zh": "zh_CN"
     })
 
