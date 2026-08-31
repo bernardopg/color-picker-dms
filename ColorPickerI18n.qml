@@ -72,20 +72,35 @@ QtObject {
         if (root.bundleCache[normalized])
             return root.bundleCache[normalized];
 
+        let bundle = loadBundleFile(bundleFile(normalized));
+
+        // zh_TW, pt_PT e afins não têm bundle próprio: caem primeiro no bundle
+        // padrão do idioma (languageDefaultLocales) e só depois no inglês, em
+        // vez de pular direto para o inglês.
+        if (!bundle && normalized !== "en_US") {
+            const language = normalized.split("_")[0];
+            const defaultLocale = root.languageDefaultLocales[language];
+            if (defaultLocale && defaultLocale !== normalized)
+                bundle = loadBundle(defaultLocale);
+            if (!bundle)
+                bundle = loadBundle("en_US");
+        }
+
+        root.bundleCache[normalized] = bundle || {};
+        return root.bundleCache[normalized];
+    }
+
+    function loadBundleFile(path) {
         const xhr = new XMLHttpRequest();
         try {
-            xhr.open("GET", Qt.resolvedUrl(bundleFile(normalized)), false);
+            xhr.open("GET", Qt.resolvedUrl(path), false);
             xhr.send();
-            if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300)) {
-                const parsed = JSON.parse(xhr.responseText || "{}");
-                root.bundleCache[normalized] = parsed;
-                return parsed;
-            }
+            if (xhr.status === 0 || (xhr.status >= 200 && xhr.status < 300))
+                return JSON.parse(xhr.responseText || "{}");
         } catch (error) {
-            console.warn("ColorPicker i18n load failed", normalized, error);
+            console.warn("ColorPicker i18n load failed", path, error);
         }
-        root.bundleCache[normalized] = (normalized === "en_US") ? ({}) : loadBundle("en_US");
-        return root.bundleCache[normalized];
+        return null;
     }
 
     // tr(key, fallback, params): resolve a key against the active bundle, then

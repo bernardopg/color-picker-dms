@@ -350,10 +350,10 @@ PluginComponent {
         PopoutComponent {
             id: popoutComp
 
-            // Largura reservada para a barra de rolagem (DankScrollbar = 10px),
-            // sempre presente para que ela nunca cubra o conteúdo e o layout não
-            // salte quando a rolagem aparece.
-            readonly property int scrollGutter: 14
+            // Recuo horizontal simétrico. Usa o mesmo valor do cabeçalho
+            // (StyledText com leftMargin spacingS), então as caixas do conteúdo
+            // alinham com o título e sobra a mesma margem dos dois lados.
+            readonly property int contentInset: Theme.spacingS
 
             headerText: root.tr("name", "Color Picker")
             detailsText: root.lastBackend ? root.lastBackend : ""
@@ -376,7 +376,8 @@ PluginComponent {
                 ColorWorkbench {
                     id: wb
 
-                    width: wbFlick.width - popoutComp.scrollGutter
+                    x: popoutComp.contentInset
+                    width: wbFlick.width - popoutComp.contentInset * 2
                     controller: root
                 }
             }

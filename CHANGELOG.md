@@ -2,20 +2,15 @@
 
 ## Unreleased
 
-- Popout now sizes itself to the active tab instead of being pinned to a fixed
-  560px, so the whole content fits and the scrollbar no longer overlays it. On
-  short screens the height is clamped and a reserved gutter keeps the scrollbar
-  off the content.
-- Align every tab to one shared rhythm: common row height, label column, grid
-  cell height and card metrics, with vertical centering on every row.
-- Format rows (Pick and Convert) now share a single `FormatRow` component, use a
-  monospace value column and no longer clip the copy button.
-- Contrast ratio moved into its own aligned card; WCAG badges and palette cells
-  now use equal-width grid columns.
-- Palette gained an aligned header with the color count, and remove/copy buttons
-  are vertically centered.
-- The swatch subtitle shows RGB when the default format is HEX, instead of
-  repeating the hex value.
+- Palette chips: hex code left-aligned inside the cell, copy/remove buttons
+  anchored to the right edge.
+- Popout content now sits on a symmetric horizontal inset that matches the
+  header padding, and format-row values are optically centered (equal side
+  columns) inside their cards.
+- i18n: audit all bundles against `en.json` (61/61 keys present, no empty
+  values, `{value}` placeholders consistent) and harden the locale fallback —
+  unsupported locales like `zh_TW` or `pt_PT` now fall back to the language
+  default bundle (`zh_CN`, `pt_BR`) before English.
 - Maintenance: bump crowdin/github-action to v3.0.1, pin
   softprops/action-gh-release to v3.0.3, and point the Crowdin download workflow
   at `.github/crowdin.yml`.

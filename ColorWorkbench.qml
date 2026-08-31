@@ -60,16 +60,20 @@ Column {
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: Theme.spacingM
-            anchors.rightMargin: Theme.spacingS
+            anchors.rightMargin: Theme.spacingM
             anchors.topMargin: Theme.spacingS
             anchors.bottomMargin: Theme.spacingS
-            spacing: Theme.spacingM
+            spacing: Theme.spacingS
 
+            // As duas colunas laterais têm a mesma largura, então o valor no
+            // meio fica centrado em relação à caixa inteira, e não em relação
+            // ao espaço que sobrou.
             StyledText {
                 text: formatRow.label
                 color: Theme.primary
                 font.pixelSize: Theme.fontSizeMedium
                 font.weight: Font.Bold
+                horizontalAlignment: Text.AlignLeft
                 verticalAlignment: Text.AlignVCenter
                 Layout.preferredWidth: formatRow.labelWidth
                 Layout.fillHeight: true
@@ -82,17 +86,24 @@ Column {
                 font.pixelSize: Theme.fontSizeMedium
                 isMonospace: true
                 elide: Text.ElideRight
+                horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: Text.AlignVCenter
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            DankActionButton {
-                iconName: "content_copy"
-                tooltipText: formatRow.copyTooltip
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: formatRow.copyRequested()
+            Item {
+                Layout.preferredWidth: formatRow.labelWidth
+                Layout.fillHeight: true
+
+                DankActionButton {
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    iconName: "content_copy"
+                    tooltipText: formatRow.copyTooltip
+                    onClicked: formatRow.copyRequested()
+                }
             }
         }
     }
@@ -478,42 +489,46 @@ Column {
                     border.color: Theme.outlineMedium
                     border.width: 1
 
-                    RowLayout {
-                        anchors.fill: parent
+                    // Hex alinhado à esquerda; botões ancorados à direita. O
+                    // texto tem largura limitada para nunca invadir os botões.
+                    StyledText {
+                        anchors.left: parent.left
                         anchors.leftMargin: Theme.spacingM
-                        anchors.rightMargin: Theme.spacingXS
-                        anchors.topMargin: Theme.spacingXS
-                        anchors.bottomMargin: Theme.spacingXS
-                        spacing: Theme.spacingXS
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: parent.width - Theme.spacingM - 2 * 26 - Theme.spacingS * 2
+                        text: modelData
+                        color: ColorUtils.bestTextColor(ColorUtils.hexToRgb(modelData))
+                        font.pixelSize: Theme.fontSizeMedium
+                        font.weight: Font.Bold
+                        isMonospace: true
+                        horizontalAlignment: Text.AlignLeft
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
 
-                        StyledText {
-                            text: modelData
-                            color: ColorUtils.bestTextColor(ColorUtils.hexToRgb(modelData))
-                            font.pixelSize: Theme.fontSizeMedium
-                            font.weight: Font.Bold
-                            isMonospace: true
-                            verticalAlignment: Text.AlignVCenter
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-                            Layout.alignment: Qt.AlignVCenter
-                        }
+                    Row {
+                        anchors.right: parent.right
+                        anchors.rightMargin: Theme.spacingXS
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 0
 
                         DankActionButton {
                             iconName: "content_copy"
+                            iconSize: Theme.iconSizeSmall
+                            buttonSize: 26
                             iconColor: ColorUtils.bestTextColor(ColorUtils.hexToRgb(modelData))
                             backgroundColor: "transparent"
                             tooltipText: root.tr("copy", "Copy")
-                            Layout.alignment: Qt.AlignVCenter
                             onClicked: controller.copyText(modelData)
                         }
 
                         DankActionButton {
                             iconName: "close"
+                            iconSize: Theme.iconSizeSmall
+                            buttonSize: 26
                             iconColor: ColorUtils.bestTextColor(ColorUtils.hexToRgb(modelData))
                             backgroundColor: "transparent"
                             tooltipText: root.tr("remove", "Remove")
-                            Layout.alignment: Qt.AlignVCenter
                             onClicked: controller.removeFromPalette(modelData)
                         }
                     }
