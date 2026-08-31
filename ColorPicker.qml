@@ -341,26 +341,42 @@ PluginComponent {
 
     // ── popout (full workbench) ──────────────────────────────────────────────
     popoutWidth: 420
+    // Apenas a altura inicial: assim que o conteúdo carrega, o PluginPopout
+    // re-vincula contentHeight ao implicitHeight real do conteúdo, então a
+    // janela passa a acompanhar a aba ativa em vez de ficar presa a um valor.
     popoutHeight: 560
 
     popoutContent: Component {
         PopoutComponent {
             id: popoutComp
 
+            // Largura reservada para a barra de rolagem (DankScrollbar = 10px),
+            // sempre presente para que ela nunca cubra o conteúdo e o layout não
+            // salte quando a rolagem aparece.
+            readonly property int scrollGutter: 14
+
             headerText: root.tr("name", "Color Picker")
             detailsText: root.lastBackend ? root.lastBackend : ""
             showCloseButton: true
 
             DankFlickable {
+                id: wbFlick
+
+                // Teto para telas baixas; abaixo dele a janela cabe o conteúdo
+                // inteiro e nenhuma barra de rolagem chega a aparecer.
+                readonly property int maxHeight: Math.max(320, Math.round((Screen.height > 0 ? Screen.height : 1080) * 0.7) - popoutComp.headerHeight - popoutComp.detailsHeight)
+
                 width: parent.width
-                height: root.popoutHeight - popoutComp.headerHeight - popoutComp.detailsHeight - Theme.spacingL
+                height: Math.min(maxHeight, wb.implicitHeight)
+                contentWidth: width
                 contentHeight: wb.implicitHeight
+                interactive: contentHeight > height
                 clip: true
 
                 ColorWorkbench {
                     id: wb
 
-                    width: parent.width
+                    width: wbFlick.width - popoutComp.scrollGutter
                     controller: root
                 }
             }

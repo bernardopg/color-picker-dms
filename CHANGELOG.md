@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased
+
+- Popout now sizes itself to the active tab instead of being pinned to a fixed
+  560px, so the whole content fits and the scrollbar no longer overlays it. On
+  short screens the height is clamped and a reserved gutter keeps the scrollbar
+  off the content.
+- Align every tab to one shared rhythm: common row height, label column, grid
+  cell height and card metrics, with vertical centering on every row.
+- Format rows (Pick and Convert) now share a single `FormatRow` component, use a
+  monospace value column and no longer clip the copy button.
+- Contrast ratio moved into its own aligned card; WCAG badges and palette cells
+  now use equal-width grid columns.
+- Palette gained an aligned header with the color count, and remove/copy buttons
+  are vertically centered.
+- The swatch subtitle shows RGB when the default format is HEX, instead of
+  repeating the hex value.
+- Maintenance: bump crowdin/github-action to v3.0.1, pin
+  softprops/action-gh-release to v3.0.3, and point the Crowdin download workflow
+  at `.github/crowdin.yml`.
+
 ## 1.1.0 - 2026-06-02
 
 - Rename plugin id and directory to `colorPickerDms` to avoid colliding with the
