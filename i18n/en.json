@@ -59,5 +59,6 @@
   "copyPalette": "Copy palette",
   "colors": "colors",
   "openWorkbench": "Open workbench",
-  "pickError": "Color pick failed or cancelled"
+  "pickError": "Color pick failed or cancelled",
+  "copyError": "Could not copy to clipboard"
 }

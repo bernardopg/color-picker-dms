@@ -38,10 +38,10 @@ Color Picker DMS is a DankMaterialShell plugin that lets you pick colors from th
 
 Required:
 
-- DankMaterialShell >= 0.1.18
+- Dux Shell (DMS) >= 2.0.0
 - `wl-copy` from `wl-clipboard` for clipboard copy
 
-Capture backend: install at least one of:
+Capture backend: install at least one of (auto selects the first installed backend; cancellation does not open another picker):
 
 - `hyprpicker`
 - `grim` + `slurp` (`magick`/ImageMagick improves fallback reliability)
@@ -59,7 +59,8 @@ Download the latest release and extract the `colorPickerDms` folder into your DM
 
 ```bash
 mkdir -p ~/.config/DankMaterialShell/plugins/colorPickerDms
-unzip color-picker-dms.zip -d ~/.config/DankMaterialShell/plugins/colorPickerDms
+unzip colorPickerDms-vX.Y.Z.zip -d /tmp
+cp -a /tmp/colorPickerDms-vX.Y.Z/. ~/.config/DankMaterialShell/plugins/colorPickerDms/
 chmod +x ~/.config/DankMaterialShell/plugins/colorPickerDms/capture/pick-color
 dms restart
 ```

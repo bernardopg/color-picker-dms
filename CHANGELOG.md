@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- Require Dux Shell 2.0 or newer and migrate shared controls to the 2.0 widget
+  library.
+- Stop capture after a cancelled or failed picker instead of opening another
+  backend; an explicitly selected backend is attempted only once.
+- Reject malformed RGB and HSL input, hide contrast results for invalid colors,
+  and report clipboard errors instead of claiming that a failed copy succeeded.
+- Fix release archive installation instructions, update the Crowdin action to
+  v3.5.1, and add conversion, contrast, and capture regression checks to CI.
 - Add 5 more of the world's most spoken languages: Hindi, Bengali, Urdu,
   Indonesian and Turkish — 61/61 keys each, registered in the language selector
   and in the locale fallback map (14 bundles total).

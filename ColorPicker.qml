@@ -5,6 +5,7 @@ import Quickshell.Io
 import qs.Common
 import qs.Services
 import qs.Widgets
+import qs.DCommon.Widgets as D
 import qs.Modules.Plugins
 import "ColorUtils.js" as ColorUtils
 import "." as Local
@@ -80,12 +81,28 @@ PluginComponent {
     }
 
     // ── clipboard ────────────────────────────────────────────────────────────
-    function copyText(text) {
-        const cmd = "printf %s " + _shQuote(text) + " | wl-copy"
-        Quickshell.execDetached(["sh", "-c", cmd])
+    Component {
+        id: copyProcessComponent
+        Process {
+            property string copiedText: ""
+            onExited: code => {
+                if (typeof ToastService === "undefined" || !ToastService)
+                    return
+                if (code === 0)
+                    ToastService.showInfo(root.tr("copied", "Copied {value}", { value: copiedText }))
+                else
+                    ToastService.showError(root.tr("copyError", "Could not copy to clipboard"))
+            }
+        }
+    }
 
-        if (typeof ToastService !== "undefined" && ToastService)
-            ToastService.showInfo(root.tr("copied", "Copied {value}", { value: text }))
+    function copyText(text) {
+        const process = copyProcessComponent.createObject(root, {
+            copiedText: text,
+            command: ["sh", "-c", 'printf %s "$1" | wl-copy', "copy-color", text]
+        })
+        process.exited.connect(function() { process.destroy() })
+        process.running = true
     }
 
     function lastColorText(format) {
@@ -167,10 +184,8 @@ PluginComponent {
         try {
             const data = JSON.parse(raw)
 
-            if (data.error) {
-                root._pickError()
+            if (data.error)
                 return
-            }
 
             root.currentRgb = {
                 r: data.r,
@@ -359,7 +374,7 @@ PluginComponent {
             detailsText: root.lastBackend ? root.lastBackend : ""
             showCloseButton: true
 
-            DankFlickable {
+            D.DFlickable {
                 id: wbFlick
 
                 // Teto para telas baixas; abaixo dele a janela cabe o conteúdo
@@ -386,7 +401,7 @@ PluginComponent {
 
     // ── bar pills ────────────────────────────────────────────────────────────
     horizontalBarPill: Component {
-        DankIcon {
+        D.DIcon {
             name: "colorize"
             size: Theme.barIconSize(root.barThickness, -2)
             color: root.picking ? Theme.primary : Theme.widgetIconColor
@@ -394,7 +409,7 @@ PluginComponent {
     }
 
     verticalBarPill: Component {
-        DankIcon {
+        D.DIcon {
             name: "colorize"
             size: Theme.barIconSize(root.barThickness, -2)
             color: root.picking ? Theme.primary : Theme.widgetIconColor
@@ -553,7 +568,7 @@ PluginComponent {
             anchors.rightMargin: Theme.spacingM
             spacing: Theme.spacingM
 
-            DankIcon {
+            D.DIcon {
                 name: action.iconName
                 size: 18
                 color: Theme.primary

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Common
 import qs.Widgets
+import qs.DCommon.Widgets as D
 import "ColorUtils.js" as ColorUtils
 
 Column {
@@ -23,6 +24,7 @@ Column {
     readonly property int swatchHeight: 132
     readonly property int sampleHeight: 108
 
+    readonly property bool contrastValid: ColorUtils.parseAny(fgInput) !== null && ColorUtils.parseAny(bgInput) !== null
     readonly property real contrastRatio: ColorUtils.contrastRatio(controller.fgRgb, controller.bgRgb)
     readonly property var contrastLevels: ColorUtils.wcagLevels(contrastRatio)
     readonly property int paletteCount: (controller.palette || []).length
@@ -97,7 +99,7 @@ Column {
                 Layout.preferredWidth: formatRow.labelWidth
                 Layout.fillHeight: true
 
-                DankActionButton {
+                D.DActionButton {
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     iconName: "content_copy"
@@ -152,7 +154,7 @@ Column {
         width: parent.width
         spacing: Theme.spacingM
 
-        DankButton {
+        D.DButton {
             Layout.fillWidth: true
             Layout.preferredHeight: buttonHeight
             Layout.alignment: Qt.AlignVCenter
@@ -164,7 +166,7 @@ Column {
             onClicked: controller.pickInteractive()
         }
 
-        DankButton {
+        D.DButton {
             Layout.preferredHeight: buttonHeight
             Layout.alignment: Qt.AlignVCenter
             text: root.tr("addToPalette", "Add to palette")
@@ -176,7 +178,7 @@ Column {
         }
     }
 
-    DankTabBar {
+    D.DTabBar {
         width: parent.width
         model: [
             { text: root.tr("tab.pick", "Pick"), icon: "content_copy" },
@@ -223,7 +225,7 @@ Column {
         spacing: Theme.spacingM
         visible: root.currentTab === 1
 
-        DankTextField {
+        D.DTextField {
             width: parent.width
             placeholderText: root.tr("inputPlaceholder", "#1E90FF, rgb(30,144,255), hsl(210,100%,56%)")
             text: root.converterInput
@@ -266,7 +268,7 @@ Column {
             width: parent.width
             spacing: Theme.spacingM
 
-            DankTextField {
+            D.DTextField {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignVCenter
@@ -280,7 +282,7 @@ Column {
                 }
             }
 
-            DankTextField {
+            D.DTextField {
                 Layout.fillWidth: true
                 Layout.preferredWidth: 1
                 Layout.alignment: Qt.AlignVCenter
@@ -294,7 +296,7 @@ Column {
                 }
             }
 
-            DankActionButton {
+            D.DActionButton {
                 Layout.alignment: Qt.AlignVCenter
                 iconName: "swap_horiz"
                 tooltipText: root.tr("swap", "Swap")
@@ -308,7 +310,15 @@ Column {
             }
         }
 
+        StyledText {
+            width: parent.width
+            text: root.tr("invalidColor", "Invalid color")
+            color: Theme.error
+            visible: !root.contrastValid
+        }
+
         StyledRect {
+            visible: root.contrastValid
             width: parent.width
             height: root.sampleHeight
             radius: Theme.cornerRadius
@@ -345,6 +355,7 @@ Column {
 
         StyledRect {
             width: parent.width
+            visible: root.contrastValid
             height: root.rowHeight
             radius: Theme.cornerRadius
             color: Theme.surfaceContainerHigh
@@ -383,6 +394,7 @@ Column {
         }
 
         GridLayout {
+            visible: root.contrastValid
             width: parent.width
             columns: 2
             columnSpacing: Theme.spacingM
@@ -451,7 +463,7 @@ Column {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            DankActionButton {
+            D.DActionButton {
                 iconName: "delete_sweep"
                 enabled: root.paletteCount > 0
                 tooltipText: root.tr("clearPalette", "Clear palette")
@@ -512,7 +524,7 @@ Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 0
 
-                        DankActionButton {
+                        D.DActionButton {
                             iconName: "content_copy"
                             iconSize: Theme.iconSizeSmall
                             buttonSize: 26
@@ -522,7 +534,7 @@ Column {
                             onClicked: controller.copyText(modelData)
                         }
 
-                        DankActionButton {
+                        D.DActionButton {
                             iconName: "close"
                             iconSize: Theme.iconSizeSmall
                             buttonSize: 26

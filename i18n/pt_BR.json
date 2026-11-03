@@ -59,5 +59,6 @@
   "copyPalette": "Copiar paleta",
   "colors": "cores",
   "openWorkbench": "Abrir bancada",
-  "pickError": "Falha ou cancelamento ao escolher cor"
+  "pickError": "Falha ou cancelamento ao escolher cor",
+  "copyError": "Não foi possível copiar para a área de transferência"
 }

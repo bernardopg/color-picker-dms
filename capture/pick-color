@@ -151,23 +151,23 @@ try_backend() {
 main() {
   local hex="" backend=""
 
-  if [ "$PREFERRED_BACKEND" != "auto" ]; then
-    if hex="$(try_backend "$PREFERRED_BACKEND")"; then
-      backend="$PREFERRED_BACKEND"
+  # Select by availability before opening any interactive picker. Once started,
+  # failure may mean cancellation, so never launch a second overlay.
+  if [ "$PREFERRED_BACKEND" = "auto" ]; then
+    if have hyprpicker; then backend=hyprpicker
+    elif have grim && have slurp; then backend=grim
+    elif have dms; then backend=dms
+    else die "no capture backend available (install hyprpicker or grim+slurp)"
     fi
+  else
+    case "$PREFERRED_BACKEND" in
+      hyprpicker|grim|dms) backend="$PREFERRED_BACKEND" ;;
+      *) die "unknown capture backend" ;;
+    esac
   fi
 
-  if [ -z "$hex" ]; then
-    local b
-    for b in hyprpicker grim dms; do
-      if hex="$(try_backend "$b")"; then
-        backend="$b"
-        break
-      fi
-    done
-  fi
-
-  [ -n "$hex" ] || die "no capture backend available or capture cancelled (install hyprpicker, or grim+slurp, or use dms)"
+  hex="$(try_backend "$backend")" || die "capture failed or cancelled"
+  [ -n "$hex" ] || die "capture failed or cancelled"
   emit_json "$hex" "$backend"
 }
 

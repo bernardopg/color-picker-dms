@@ -39,7 +39,7 @@ function parseAny(input) {
     if (hex)
         return hexToRgb("#" + hex);
 
-    var rgbMatch = str.match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+    var rgbMatch = str.match(/^rgb\(\s*(\d+)(?:\s*,\s*|\s+)(\d+)(?:\s*,\s*|\s+)(\d+)\s*\)$/i);
     if (rgbMatch) {
         return {
             r: clamp(parseInt(rgbMatch[1]), 0, 255),
@@ -48,7 +48,7 @@ function parseAny(input) {
         };
     }
 
-    var hslMatch = str.match(/hsla?\(\s*(\d+)[,\s]+(\d+)%?[,\s]+(\d+)%?/i);
+    var hslMatch = str.match(/^hsl\(\s*(\d+)(?:\s*,\s*|\s+)(\d+)%(?:\s*,\s*|\s+)(\d+)%\s*\)$/i);
     if (hslMatch) {
         return hslToRgb(parseInt(hslMatch[1]), parseInt(hslMatch[2]), parseInt(hslMatch[3]));
     }

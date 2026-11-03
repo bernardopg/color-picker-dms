@@ -54,3 +54,8 @@ jobs:
         run: |
           bash -n capture/pick-color
           shellcheck -S warning capture/pick-color
+
+      - name: Test color conversion and capture
+        run: |
+          node tests/color-utils.cjs
+          python3 tests/capture.py

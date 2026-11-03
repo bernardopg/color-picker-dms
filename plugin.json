@@ -16,6 +16,6 @@
   "repo": "https://github.com/bernardopg/color-picker-dms",
   "screenshot": "https://raw.githubusercontent.com/bernardopg/color-picker-dms/main/assets/screenshot.png",
   "requires": ["wl-clipboard"],
-  "requires_dms": ">=0.1.18",
+  "requires_dms": ">=2.0.0",
   "permissions": ["process", "settings_read", "settings_write"]
 }
