@@ -2,7 +2,7 @@
   "id": "colorPickerDms",
   "name": "Color Picker DMS",
   "description": "Pick colors from the screen, convert between HEX/RGB/HSL/HSV/CMYK, build palettes, and check WCAG contrast — a complete color workbench in your DankBar",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "author": "bernardopg",
   "icon": "colorize",

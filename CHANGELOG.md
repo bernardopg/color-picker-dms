@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 2.0.0 - 2026-11-03
+
 - Require Dux Shell 2.0 or newer and migrate shared controls to the 2.0 widget
   library.
 - Stop capture after a cancelled or failed picker instead of opening another
